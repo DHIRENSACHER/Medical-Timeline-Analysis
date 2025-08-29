@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Timeline Analysis</title>
+    <style>
+        :root {
+            --primary-green: #DDEB9D;
+            --secondary-cream: #FAF6E9;
+            --dark-green: #22333B;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--secondary-cream) 0%, var(--primary-green) 100%);
+            min-height: 100vh;
+            color: var(--dark-green);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(34, 51, 59, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            color: var(--dark-green);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header .subtitle {
+            font-size: 1.1em;
+            opacity: 0.8;
+            margin-bottom: 20px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .info-card {
+            background: var(--primary-green);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: left;
+            font-size: 0.9em;
+        }
+
+        .info-card strong {
+            color: var(--dark-green);
+        }
+
+        .input-section {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(34, 51, 59, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .input-section h2 {
+            color: var(--dark-green);
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark-green);
+        }
+
+        .textarea-container {
+            position: relative;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 15px;
+            border: 2px solid var(--primary-green);
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 14px;
+            background: var(--secondary-cream);
+            color: var(--dark-green);
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--dark-green);
+            background: white;
+            box-shadow: 0 0 20px rgba(34, 51, 59, 0.1);
+        }
+
+        textarea::placeholder {
+            color: rgba(34, 51, 59, 0.5);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .date-input {
+            padding: 10px 15px;
+            border: 2px solid var(--primary-green);
+            border-radius: 8px;
+            background: var(--secondary-cream);
+            color: var(--dark-green);
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .date-input:focus {
+            outline: none;
+            border-color: var(--dark-green);
+            background: white;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: var(--dark-green);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1a2529;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(34, 51, 59, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--primary-green);
+            color: var(--dark-green);
+        }
+
+        .btn-secondary:hover {
+            background: #d4e088;
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--primary-green);
+            border-top: 4px solid var(--dark-green);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .timeline-section {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(34, 51, 59, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: none;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .timeline-title {
+            color: var(--dark-green);
+            font-size: 1.8em;
+            font-weight: 700;
+        }
+
+        .timeline-stats {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            background: var(--primary-green);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .timeline-item {
+            background: var(--secondary-cream);
+            border-left: 4px solid var(--primary-green);
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 0 12px 12px 0;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .timeline-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 20px rgba(34, 51, 59, 0.1);
+        }
+
+        .timeline-item.disease { border-left-color: #e74c3c; }
+        .timeline-item.treatment { border-left-color: #3498db; }
+        .timeline-item.appointment { border-left-color: #f39c12; }
+        .timeline-item.observation { border-left-color: var(--dark-green); }
+
+        .timeline-date {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: var(--dark-green);
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timeline-category {
+            display: inline-block;
+            background: var(--dark-green);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .timeline-description {
+            color: var(--dark-green);
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .confidence-indicator {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .confidence-high { background: #27ae60; }
+        .confidence-medium { background: #f39c12; }
+        .confidence-low { background: #e74c3c; }
+
+        .error {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c66;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .success {
+            background: var(--primary-green);
+            border: 1px solid #9bc53d;
+            color: var(--dark-green);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: 600;
+        }
+
+        .undated-section {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px dashed var(--primary-green);
+        }
+
+        .undated-title {
+            color: var(--dark-green);
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .timeline-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🩺 Medical Timeline Analysis</h1>
+            <p class="subtitle">Extract and visualize temporal events from medical reports</p>
+            <div class="info-grid">
+                <div class="info-card">
+                    <strong>🦠 Disease Onset:</strong> Symptoms and progression tracking
+                </div>
+                <div class="info-card">
+                    <strong>💊 Treatment:</strong> Medications and procedures timeline
+                </div>
+                <div class="info-card">
+                    <strong>🗓️ Appointments:</strong> Visits and scheduled events
+                </div>
+                <div class="info-card">
+                    <strong>📝 Observations:</strong> General clinical notes and findings
+                </div>
+            </div>
+        </div>
+
+        <div class="input-section">
+            <h2>📝 Input Medical Text</h2>
+            <form id="analysisForm">
+                <div class="form-group">
+                    <label for="medicalText">Medical Report:</label>
+                    <div class="textarea-container">
+                        <textarea 
+                            id="medicalText" 
+                            name="medicalText" 
+                            placeholder="Patient Name: John Doe&#10;Date of Visit: August 29, 2025&#10;&#10;Patient presents with..."
+                            required
+                        ></textarea>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <div class="form-group">
+                        <label for="referenceDate">Reference Date:</label>
+                        <input type="date" id="referenceDate" class="date-input" required>
+                    </div>
+                    <button type="button" id="sampleBtn" class="btn btn-secondary">📋 Load Sample</button>
+                    <button type="submit" class="btn btn-primary">🔍 Generate Timeline</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Processing medical text and extracting timeline events...</p>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // Set today's date as default
+        document.getElementById('referenceDate').valueAsDate = new Date();
+
+        // Load sample text
+        document.getElementById('sampleBtn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/sample');
+                const data = await response.json();
+                document.getElementById('medicalText').value = data.sample_text;
+            } catch (error) {
+                console.error('Error loading sample:', error);
+            }
+        });
+
+        // Form submission
+        document.getElementById('analysisForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const medicalText = document.getElementById('medicalText').value;
+            const referenceDate = document.getElementById('referenceDate').value;
+            
+            if (!medicalText.trim()) {
+                showError('Please enter some medical text to analyze.');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').innerHTML = '';
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        medical_text: medicalText,
+                        reference_date: referenceDate
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayTimeline(data);
+                } else {
+                    showError(data.error || 'An error occurred during analysis.');
+                }
+            } catch (error) {
+                showError('Network error: ' + error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        });
+
+        function displayTimeline(data) {
+            const resultsDiv = document.getElementById('results');
+            
+            if (data.total_events === 0) {
+                resultsDiv.innerHTML = `
+                    <div class="timeline-section" style="display: block;">
+                        <p style="text-align: center; color: var(--dark-green); font-size: 1.1em;">
+                            No temporal events could be extracted from the provided text. 
+                            Try including more specific dates and medical events.
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Show success message
+            showSuccess(`Successfully extracted ${data.total_events} events from the medical text!`);
+
+            const datedEvents = data.events.filter(e => e.date !== null);
+            const undatedEvents = data.events.filter(e => e.date === null);
+
+            let timelineHtml = `
+                <div class="timeline-section" style="display: block;">
+                    <div class="timeline-header">
+                        <h2 class="timeline-title">📋 Medical Timeline</h2>
+                        <div class="timeline-stats">
+                            <div class="stat">Total: ${data.total_events}</div>
+                            <div class="stat">Dated: ${data.dated_events}</div>
+                            <div class="stat">Undated: ${data.undated_events}</div>
+                        </div>
+                    </div>
+            `;
+
+            // Display dated events
+            datedEvents.forEach(event => {
+                const date = new Date(event.date);
+                const dateStr = date.toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+                
+                const categoryClass = getCategoryClass(event.category);
+                const emoji = getCategoryEmoji(event.category);
+                const confidenceClass = `confidence-${event.confidence}`;
+                
+                timelineHtml += `
+                    <div class="timeline-item ${categoryClass}">
+                        <div class="confidence-indicator ${confidenceClass}" title="Confidence: ${event.confidence}"></div>
+                        <div class="timeline-date">${emoji} ${dateStr}</div>
+                        <div class="timeline-category">${event.category}</div>
+                        <div class="timeline-description">${event.event_description}</div>
+                    </div>
+                `;
+            });
+
+            // Display undated events if any
+            if (undatedEvents.length > 0) {
+                timelineHtml += `
+                    <div class="undated-section">
+                        <h3 class="undated-title">📋 Events Without Specific Dates</h3>
+                `;
+                
+                undatedEvents.forEach(event => {
+                    const categoryClass = getCategoryClass(event.category);
+                    const emoji = getCategoryEmoji(event.category);
+                    
+                    timelineHtml += `
+                        <div class="timeline-item ${categoryClass}">
+                            <div class="timeline-date">${emoji} Date Unknown</div>
+                            <div class="timeline-category">${event.category}</div>
+                            <div class="timeline-description">${event.event_description}</div>
+                        </div>
+                    `;
+                });
+                
+                timelineHtml += `</div>`;
+            }
+
+            timelineHtml += `</div>`;
+            resultsDiv.innerHTML = timelineHtml;
+        }
+
+        function getCategoryClass(category) {
+            const classMap = {
+                'Disease Onset/Progression': 'disease',
+                'Treatment': 'treatment',
+                'Appointment/Scheduling': 'appointment',
+                'Other Clinical Observations': 'observation'
+            };
+            return classMap[category] || 'observation';
+        }
+
+        function getCategoryEmoji(category) {
+            const emojiMap = {
+                'Disease Onset/Progression': '🦠',
+                'Treatment': '💊',
+                'Appointment/Scheduling': '🗓️',
+                'Other Clinical Observations': '📝'
+            };
+            return emojiMap[category] || '📝';
+        }
+
+        function showError(message) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <div class="error">
+                    <strong>Error:</strong> ${message}
+                </div>
+            `;
+        }
+
+        function showSuccess(message) {
+            const resultsDiv = document.getElementById('results');
+            const existingContent = resultsDiv.innerHTML;
+            resultsDiv.innerHTML = `
+                <div class="success">${message}</div>
+                ${existingContent}
+            `;
+        }
+    </script>
+</body>
+</html>
